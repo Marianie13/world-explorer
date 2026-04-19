@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #f5f0e8;
+      --ink: #0d0d0d;
+      --accent-red: #c0392b;
+      --navy: #2c3e50;
+      --card-bg: #fffdfa;
+      --border: #ded7cc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "DM Sans", sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.4;
+    }
+
+    .app {
+      width: min(1200px, 92%);
+      margin: 2rem auto 3rem;
+    }
+
+    header h1 {
+      font-family: "Playfair Display", serif;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      color: var(--navy);
+      margin-bottom: 0.6rem;
+    }
+
+    header p {
+      max-width: 70ch;
+      margin-bottom: 1.8rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.9rem;
+      margin-bottom: 1.6rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .control-group label {
+      font-size: 0.88rem;
+      color: var(--navy);
+      font-weight: 700;
+    }
+
+    .control-group input,
+    .control-group select {
+      border: 1px solid var(--border);
+      border-radius: 0.6rem;
+      background: #fff;
+      padding: 0.7rem 0.8rem;
+      font-size: 0.96rem;
+      font-family: inherit;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      border-color: var(--accent-red);
+      box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.2);
+    }
+
+    .status {
+      min-height: 3rem;
+      margin: 1rem 0 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 5px solid rgba(44, 62, 80, 0.2);
+      border-top-color: var(--accent-red);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error {
+      color: #8f1f12;
+      background: rgba(192, 57, 43, 0.1);
+      border: 1px solid rgba(192, 57, 43, 0.3);
+      padding: 0.75rem 1rem;
+      border-radius: 0.6rem;
+    }
+
+    .countries-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .country-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 0.8rem;
+      overflow: hidden;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: cardIn 0.5s ease forwards;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .country-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    @keyframes cardIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .country-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-body {
+      padding: 0.8rem 0.9rem 1rem;
+    }
+
+    .card-body h3 {
+      font-family: "Playfair Display", serif;
+      font-size: 1.06rem;
+      color: var(--navy);
+      margin-bottom: 0.4rem;
+    }
+
+    .card-body p {
+      font-size: 0.92rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .card-body strong {
+      color: var(--accent-red);
+    }
+
+    .empty-state {
+      padding: 1rem;
+      border: 1px dashed var(--border);
+      border-radius: 0.6rem;
+      background: rgba(255, 255, 255, 0.5);
+      text-align: center;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 13, 13, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 50;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      width: min(680px, 100%);
+      border-radius: 0.9rem;
+      border: 1px solid var(--border);
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      padding: 1.2rem 1.2rem 1.4rem;
+    }
+
+    .modal button.close-btn {
+      position: absolute;
+      top: 0.7rem;
+      right: 0.7rem;
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 999px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      margin-bottom: 1rem;
+      padding-right: 2.4rem;
+    }
+
+    .modal-header img {
+      width: 90px;
+      height: 60px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+      font-family: "Playfair Display", serif;
+      color: var(--navy);
+      font-size: 1.55rem;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .modal-item {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 0.55rem;
+      padding: 0.65rem 0.7rem;
+    }
+
+    .modal-item strong {
+      display: block;
+      color: var(--accent-red);
+      margin-bottom: 0.18rem;
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .maps-link {
+      display: inline-block;
+      margin-top: 1rem;
+      text-decoration: none;
+      color: #fff;
+      background: var(--navy);
+      padding: 0.55rem 0.75rem;
+      border-radius: 0.5rem;
+      font-weight: 700;
+    }
+
+    .maps-link:hover {
+      background: var(--accent-red);
+    }
+
+    @media (max-width: 600px) {
+      .app {
+        width: 94%;
+        margin-top: 1.2rem;
+      }
+
+      .country-card img {
+        height: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>World Explorer</h1>
+      <p>Explora países del mundo con filtros, ordenamiento y una vista detallada de información geográfica y cultural.</p>
+    </header>
+
+    <section class="controls" aria-label="Controles de búsqueda y filtro">
+      <div class="control-group">
+        <label for="searchInput">Buscar país</label>
+        <input id="searchInput" type="search" placeholder="Ej. Colombia, Japan, France..." autocomplete="off" />
+      </div>
+      <div class="control-group">
+        <label for="regionSelect">Región</label>
+        <select id="regionSelect">
+          <option value="all">Todas</option>
+          <option value="Africa">África</option>
+          <option value="Americas">Américas</option>
+          <option value="Asia">Asia</option>
+          <option value="Europe">Europa</option>
+          <option value="Oceania">Oceanía</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="sortSelect">Ordenar por</label>
+        <select id="sortSelect">
+          <option value="name">Nombre</option>
+          <option value="population">Población</option>
+          <option value="area">Área</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="status" id="status" aria-live="polite"></div>
+    <section class="countries-grid" id="countriesGrid" aria-label="Listado de países"></section>
+  </main>
+
+  <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+    <article class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="close-btn" id="closeModalBtn" aria-label="Cerrar modal">✕</button>
+      <div id="modalContent"></div>
+    </article>
+  </div>
+
+  <script>
+    // ============================
+    // Estado global y selectores base
+    // ============================
+    const API_URL = "https://restcountries.com/v3.1/all?fields=name,flags,capital,population,region,subregion,area,currencies,languages,maps,cca3";
+    const formatter = new Intl.NumberFormat("es-CO");
+    const state = {
+      countries: [],
+      searchTerm: "",
+      region: "all",
+      sortBy: "name"
+    };
+
+    const statusEl = document.getElementById("status");
+    const countriesGridEl = document.getElementById("countriesGrid");
+    const searchInputEl = document.getElementById("searchInput");
+    const regionSelectEl = document.getElementById("regionSelect");
+    const sortSelectEl = document.getElementById("sortSelect");
+    const modalOverlayEl = document.getElementById("modalOverlay");
+    const modalContentEl = document.getElementById("modalContent");
+    const closeModalBtnEl = document.getElementById("closeModalBtn");
+
+    // ============================
+    // Utilidades de render para estados visuales
+    // ============================
+    function showSpinner() {
+      statusEl.innerHTML = '<div class="spinner" aria-label="Cargando países"></div>';
+    }
+
+    function showError(message) {
+      statusEl.innerHTML = `<p class="error">${message}</p>`;
+    }
+
+    function clearStatus() {
+      statusEl.innerHTML = "";
+    }
+
+    // ============================
+    // Llamada a API con async/await y manejo de errores con try/catch
+    // ============================
+    async function fetchCountries() {
+      showSpinner();
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+          throw new Error("No se pudo obtener la información de países.");
+        }
+        const data = await response.json();
+        state.countries = Array.isArray(data) ? data : [];
+        clearStatus();
+      } catch (error) {
+        showError("Error cargando países. Verifica tu conexión e intenta nuevamente.");
+        state.countries = [];
+        console.error("Error API RestCountries:", error);
+      }
+    }
+
+    // ============================
+    // Debounce: retrasa la ejecución para no filtrar en cada tecla instantáneamente
+    // ============================
+    function debounce(callback, delay = 250) {
+      let timeoutId;
+      return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => callback(...args), delay);
+      };
+    }
+
+    // ============================
+    // Filtro + ordenamiento:
+    // - .filter() por nombre y región
+    // - .sort() con comparador dinámico según criterio
+    // ============================
+    function getProcessedCountries() {
+      const normalizedTerm = state.searchTerm.trim().toLowerCase();
+
+      const filtered = state.countries.filter((country) => {
+        const countryName = country.name?.common?.toLowerCase() || "";
+        const matchesName = countryName.includes(normalizedTerm);
+        const matchesRegion = state.region === "all" || country.region === state.region;
+        return matchesName && matchesRegion;
+      });
+
+      const comparators = {
+        name: (a, b) => (a.name?.common || "").localeCompare(b.name?.common || ""),
+        population: (a, b) => (b.population || 0) - (a.population || 0),
+        area: (a, b) => (b.area || 0) - (a.area || 0)
+      };
+
+      return filtered.sort(comparators[state.sortBy] || comparators.name);
+    }
+
+    // ============================
+    // Render de tarjetas:
+    // - .map() + template literals para construir HTML dinámico
+    // - animation-delay para entrada escalonada
+    // ============================
+    function renderCountries() {
+      const processedCountries = getProcessedCountries();
+
+      if (!processedCountries.length) {
+        countriesGridEl.innerHTML = '<div class="empty-state">No hay países que coincidan con tu búsqueda.</div>';
+        return;
+      }
+
+      countriesGridEl.innerHTML = processedCountries
+        .map((country, index) => {
+          const cardName = country.name?.common || "Sin nombre";
+          const capital = country.capital?.[0] || "No disponible";
+          const population = formatter.format(country.population || 0);
+          const flag = country.flags?.svg || country.flags?.png || "";
+          const alt = country.flags?.alt || `Bandera de ${cardName}`;
+
+          return `
+            <article class="country-card" data-country-code="${country.cca3}" style="animation-delay: ${index * 35}ms">
+              <img src="${flag}" alt="${alt}" loading="lazy" />
+              <div class="card-body">
+                <h3>${cardName}</h3>
+                <p><strong>Capital:</strong> ${capital}</p>
+                <p><strong>Población:</strong> ${population}</p>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    // ============================
+    // Modal: abre con datos completos de un país específico
+    // ============================
+    function openModal(country) {
+      if (!country) return;
+
+      const name = country.name?.common || "Sin nombre";
+      const capital = country.capital?.join(", ") || "No disponible";
+      const region = country.region || "No disponible";
+      const subregion = country.subregion || "No disponible";
+      const population = formatter.format(country.population || 0);
+      const area = `${formatter.format(country.area || 0)} km²`;
+      const currencies = country.currencies
+        ? Object.values(country.currencies).map((currency) => currency.name || "").filter(Boolean).join(", ")
+        : "No disponible";
+      const languages = country.languages
+        ? Object.values(country.languages).join(", ")
+        : "No disponible";
+      const mapsLink = country.maps?.googleMaps || "#";
+      const flag = country.flags?.svg || country.flags?.png || "";
+      const alt = country.flags?.alt || `Bandera de ${name}`;
+
+      modalContentEl.innerHTML = `
+        <header class="modal-header">
+          <img src="${flag}" alt="${alt}" />
+          <h2 id="modalTitle">${name}</h2>
+        </header>
+        <section class="modal-grid">
+          <div class="modal-item"><strong>Capital</strong>${capital}</div>
+          <div class="modal-item"><strong>Región</strong>${region}</div>
+          <div class="modal-item"><strong>Subregión</strong>${subregion}</div>
+          <div class="modal-item"><strong>Población</strong>${population}</div>
+          <div class="modal-item"><strong>Área</strong>${area}</div>
+          <div class="modal-item"><strong>Monedas</strong>${currencies}</div>
+          <div class="modal-item"><strong>Idiomas</strong>${languages}</div>
+        </section>
+        <a class="maps-link" href="${mapsLink}" target="_blank" rel="noopener noreferrer">Ver en Google Maps</a>
+      `;
+
+      modalOverlayEl.classList.add("show");
+      modalOverlayEl.setAttribute("aria-hidden", "false");
+    }
+
+    // ============================
+    // Modal: cierre reutilizable para botón, clic externo y tecla Escape
+    // ============================
+    function closeModal() {
+      modalOverlayEl.classList.remove("show");
+      modalOverlayEl.setAttribute("aria-hidden", "true");
+    }
+
+    // ============================
+    // Delegación de eventos para clicks en tarjetas de países
+    // ============================
+    function setupEventListeners() {
+      const onSearchInput = debounce((event) => {
+        state.searchTerm = event.target.value || "";
+        renderCountries();
+      }, 250);
+
+      searchInputEl.addEventListener("input", onSearchInput);
+
+      regionSelectEl.addEventListener("change", (event) => {
+        state.region = event.target.value;
+        renderCountries();
+      });
+
+      sortSelectEl.addEventListener("change", (event) => {
+        state.sortBy = event.target.value;
+        renderCountries();
+      });
+
+      countriesGridEl.addEventListener("click", (event) => {
+        const card = event.target.closest(".country-card");
+        if (!card) return;
+
+        const countryCode = card.dataset.countryCode;
+        const selectedCountry = state.countries.find((country) => country.cca3 === countryCode);
+        openModal(selectedCountry);
+      });
+
+      closeModalBtnEl.addEventListener("click", closeModal);
+
+      modalOverlayEl.addEventListener("click", (event) => {
+        if (event.target === modalOverlayEl) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modalOverlayEl.classList.contains("show")) {
+          closeModal();
+        }
+      });
+    }
+
+    // ============================
+    // Inicialización principal de la aplicación
+    // ============================
+    async function init() {
+      setupEventListeners();
+      await fetchCountries();
+      renderCountries();
+    }
+
+    // ============================
+    // Función autoejecutable para iniciar la SPA al cargar
+    // ============================
+    (function autoInit() {
+      init();
+    })();
+  </script>
+</body>
+</html>
