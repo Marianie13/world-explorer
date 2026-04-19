@@ -108,7 +108,22 @@ Este flujo asegura una carga controlada de datos y manejo adecuado de errores de
 
 ## 5. Explicación del proceso de despliegue
 
-El despliegue se realizó con **GitHub Pages** siguiendo estos pasos:
+### 5.1 Despliegue en Render (URL principal)
+
+Render permite publicar aplicaciones web conectando el repositorio de GitHub. Como **World Explorer** es una SPA estática (HTML + CSS + JS sin build), el despliegue correcto es un **Static Site** (sitio estático), no un **Web Service** de Node.
+
+Pasos generales:
+
+1. Crear un servicio **Static Site** en Render y conectarlo al repositorio.
+2. Definir **Publish Directory** como la carpeta donde está `index.html` (en este proyecto: la raíz del repo).
+3. Dejar **Build Command** vacío o usar un comando no-op (por ejemplo `true`), porque no hay compilación.
+4. Desplegar y verificar que la URL pública responde con `200` y carga `index.html`.
+
+Nota práctica: si el servicio queda configurado como Node sin un comando válido, Render puede fallar con códigos de error de ejecución; y si el **Publish Directory** no coincide con la ubicación de `index.html`, el navegador puede mostrar **404 Not Found**.
+
+### 5.2 Despliegue en GitHub Pages (URL alterna)
+
+Adicionalmente, el proyecto puede desplegarse en **GitHub Pages** siguiendo estos pasos:
 
 1. Inicialización del repositorio local con `git init`.
 2. Agregado de archivos con `git add .`.
@@ -126,7 +141,10 @@ El despliegue se realizó con **GitHub Pages** siguiendo estos pasos:
 
 ## 6. Dirección URL del despliegue
 
-**URL de la aplicación desplegada:**  
+**URL principal (Render):**  
+https://world-explorer-fovv.onrender.com
+
+**URL alterna (GitHub Pages):**  
 https://Marianie13.github.io/world-explorer/
 
 ---
@@ -140,5 +158,5 @@ https://github.com/Marianie13/world-explorer
 
 ## 8. Conclusión
 
-La actividad permitió aplicar conceptos fundamentales de desarrollo web frontend: manipulación del DOM, consumo de APIs REST, programación asíncrona con `async/await`, filtros y ordenamientos de datos, diseño responsivo y despliegue en la nube con GitHub Pages.  
+La actividad permitió aplicar conceptos fundamentales de desarrollo web frontend: manipulación del DOM, consumo de APIs REST, programación asíncrona con `async/await`, filtros y ordenamientos de datos, diseño responsivo y despliegue en la nube (Render como hosting principal y GitHub Pages como alternativa).  
 El resultado es una aplicación funcional, escalable y adecuada como evidencia de aprendizaje en desarrollo web.

@@ -9,7 +9,7 @@ World Explorer es una Single Page Application (SPA) en JavaScript vanilla que co
 ## Enlaces del proyecto
 
 - Repositorio (código fuente): https://github.com/Marianie13/world-explorer
-- Despliegue principal (Render): https://world-explorer-fvoy.onrender.com
+- Despliegue principal (Render): https://world-explorer-fovv.onrender.com
 - Despliegue (GitHub Pages): https://Marianie13.github.io/world-explorer/
 
 ## Tecnologías usadas
@@ -27,6 +27,20 @@ World Explorer es una Single Page Application (SPA) en JavaScript vanilla que co
 
 No se requiere Node.js, npm, frameworks ni bundlers.
 
+## Despliegue en Render (recomendado para este proyecto)
+
+Este proyecto es **100% estático**. En Render debes crear un **Static Site** (no un Web Service de Node), para que sirva `index.html` desde la raíz.
+
+1. En Render, crea un servicio **Static Site** y conéctalo al repositorio.
+2. **Root Directory**: `.` (raíz del repo).
+3. **Build Command**: déjalo vacío o usa `true` (no hay build).
+4. **Publish Directory**: `.` (misma raíz; ahí están `index.html`, `styles.css` y `app.js`).
+5. Despliega y espera a que termine el deploy.
+
+Si ves **404 Not Found** en la URL de Render, casi siempre es porque el servicio quedó como **Node Web Service** o el **Publish Directory** no apunta a la carpeta donde está `index.html`.
+
+Opcional: este repo incluye `render.yaml` para que Render detecte la configuración como sitio estático.
+
 ## Despliegue en GitHub Pages
 
 1. Sube el proyecto a tu repositorio de GitHub.
@@ -37,7 +51,7 @@ No se requiere Node.js, npm, frameworks ni bundlers.
    - **Folder**: `/ (root)`
 4. Guarda los cambios.
 
-Deploy esperado (Render): https://world-explorer-fvoy.onrender.com  
+Deploy esperado (Render): https://world-explorer-fovv.onrender.com  
 Deploy alterno (GitHub Pages): https://Marianie13.github.io/world-explorer/
 
 ## Documento PDF solicitado
